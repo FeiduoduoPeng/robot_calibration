@@ -879,16 +879,21 @@ bool RobotCalibrater::computeCalibraParam_02(vectorCalibration calibration_data)
 
 
     //计算费雪信息矩阵．
-    Matrix3d laser_fim = Matrix3d::Zero();
-    laser_fim(0,0) =  1 / ( pow(laser_std_x, 2) );
-    laser_fim(1,1) =  1 / ( pow(laser_std_y, 2) );
-    laser_fim(2,2) =  1 / ( pow(laser_std_th, 2) );
+    //** gsl_matrix *laser_fim = gsl_matrix_alloc(3,3);
+    //** gsl_matrix_set_zero(laser_fim);
+    //** gsl_matrix_set(laser_fim,0,0, 1 / (laser_std_x*laser_std_x));
+    //** gsl_matrix_set(laser_fim,1,1, 1 / (laser_std_y*laser_std_y));
+    //** gsl_matrix_set(laser_fim,2,2, 1 / (laser_std_th*laser_std_th));
+
+    Matrix3d eigen_laser_fim = Matrix3d::Zero();
+    eigen_laser_fim(0,0) =  1 / ( pow(laser_std_x, 2) );
+    eigen_laser_fim(1,1) =  1 / ( pow(laser_std_y, 2) );
+    eigen_laser_fim(2,2) =  1 / ( pow(laser_std_th, 2) );
 
     Matrix<double, 6, 6> fim = Matrix<double, 6, 6>::Zero();
-
     for(int i = 0; i < tuples.size(); i++)
     {
-        MatrixXd fimi = tuples[i].compute_fim(res, laser_fim);
+        MatrixXd fimi = tuples[i].compute_fim(res, eigen_laser_fim);
         fim += fimi;
     }
     /* Inverting the FIM to get covariance */

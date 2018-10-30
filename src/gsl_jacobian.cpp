@@ -56,9 +56,7 @@ gsl_matrix * gsl_jacobian( gsl_vector * (*function)(const gsl_vector* x, void*pa
 
             int res = gsl_deriv_central( &F, gsl_vector_get(x,j), h, &result, &abserr);
 
-            
             gsl_matrix_set(m,i,j,result);
-            
         }
         
     gsl_vector_free(fx);

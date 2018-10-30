@@ -10,64 +10,58 @@ calib_tuple::~calib_tuple()
 
 }
 
-//** gsl_vector * jacobian_helper(const gsl_vector* calib, void*params)
-Eigen::Matrix<double,Eigen::Dynamic,1>  jacobian_helper(const Eigen::Matrix<double,Eigen::Dynamic,1> &calib, void *params)
+gsl_vector * jacobian_helper(const gsl_vector* calib, void*params)
 {
-	using namespace Eigen;
     calib_tuple * t = (calib_tuple*) params;
     calib_result r;
-    //** r.radius_l = gsl_vector_get(calib, 0);
-    //** r.radius_r = gsl_vector_get(calib, 1);
-    //** r.axle = gsl_vector_get(calib, 2);
-    //** r.l[0] = gsl_vector_get(calib, 3);
-    //** r.l[1] = gsl_vector_get(calib, 4);
-    //** r.l[2] = gsl_vector_get(calib, 5);
-    r.radius_l = calib( 0);
-    r.radius_r = calib( 1);
-    r.axle = calib( 2);
-    r.l[0] = calib( 3);
-    r.l[1] = calib( 4);
-    r.l[2] = calib( 5);
+    r.radius_l = gsl_vector_get(calib, 0);
+    r.radius_r = gsl_vector_get(calib, 1);
+    r.axle = gsl_vector_get(calib, 2);
+    r.l[0] = gsl_vector_get(calib, 3);
+    r.l[1] = gsl_vector_get(calib, 4);
+    r.l[2] = gsl_vector_get(calib, 5);
     t->compute_disagreement(r);
     
-
-    //** gsl_vector *res = gsl_vector_alloc(3);
-    //** gsl_vector_set(res, 0, t->est_sm[0]);
-    //** gsl_vector_set(res, 1, t->est_sm[1]);
-    //** gsl_vector_set(res, 2, t->est_sm[2]);
-	Vector3d res(t->est_sm[0], t->est_sm[1], t->est_sm[2]);	
+    gsl_vector*res = gsl_vector_alloc(3);
+    gsl_vector_set(res, 0, t->est_sm[0]);
+    gsl_vector_set(res, 1, t->est_sm[1]);
+    gsl_vector_set(res, 2, t->est_sm[2]);
     return res;
 }
 
-
-//** gsl_matrix* calib_tuple::compute_fim(struct calib_result&r, gsl_matrix * inf_sm)
-Eigen::MatrixXd calib_tuple::compute_fim(struct calib_result &r, const Eigen::MatrixXd &inf_sm)
+Eigen::MatrixXd calib_tuple::compute_fim(struct calib_result&r, const Eigen::MatrixXd &eigen_inf_sm)
 {
-	/***************
-	using namespace Eigen;
     double state[6] = { r.radius_l, r.radius_r, r.axle, r.l[0], r.l[1], r.l[2]};
-
-    //** gsl_vector_view v = gsl_vector_view_array(state, 6);
-    //** gsl_matrix * J = gsl_jacobian(jacobian_helper, &(v.vector), this);
-	Matrix<double, 6, 1> v(state);
-    Matrix<double,6,6> J = gsl_jacobian(jacobian_helper, &v, this);
+    gsl_vector_view v = gsl_vector_view_array(state, 6);
+    gsl_matrix * J = gsl_jacobian(jacobian_helper, &(v.vector), this);
         
+	/*convert the eigen matrix to gsl mstrix*/
+	gsl_matrix *inf_sm = gsl_matrix_alloc(3,3);
+    gsl_matrix_set_zero(inf_sm);
+    gsl_matrix_set(inf_sm,0,0, eigen_inf_sm(0,0));
+    gsl_matrix_set(inf_sm,1,1, eigen_inf_sm(1,1));
+    gsl_matrix_set(inf_sm,2,2, eigen_inf_sm(2,2));
+
     // XXXXXXXXXX
     // FIM = J' * inf_sm * J
     // A = J' * inf_sm
-    //** gsl_matrix * A = gsl_matrix_alloc(6,3);    
-    //** gsl_blas_dgemm (CblasTrans, CblasNoTrans, 1, J, inf_sm, 0, A);
-
+    gsl_matrix * A = gsl_matrix_alloc(6,3);    
+    gsl_blas_dgemm (CblasTrans, CblasNoTrans, 1, J, inf_sm, 0, A);
     // FIM = A * J
-    //** gsl_matrix * fim = gsl_matrix_alloc(6,6); 
-    //** gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1, A, J, 0, fim);
-	Matrix<double,6,6> fim = J.transpose() * inf_sm * J;
+    gsl_matrix * fim = gsl_matrix_alloc(6,6); 
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1, A, J, 0, fim);
     
-    //** gsl_matrix_free(J);
-    //** gsl_matrix_free(A);
-	*****************/
-	Eigen::Matrix<double, 6, 6> fim;
-    return fim;
+	Eigen::Matrix<double,6,6> eigen_fim;
+	for(int i=0; i<6; ++i){
+		for(int j=0; j<6; ++j){
+			eigen_fim(i,j) = gsl_matrix_get(fim, i, j);
+		}
+	}
+
+    gsl_matrix_free(J);
+    gsl_matrix_free(A);
+    //** return fim;
+	return eigen_fim;
 }
 
 void calib_tuple::write_as_long_line(std::ostream&os)

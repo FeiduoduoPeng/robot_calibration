@@ -47,27 +47,27 @@ struct calib_tuple {
 	
 /** Temp data, used for outliers computations */
 	
-	/** Estimated rototranslation based on odometry params. */
+	/* Estimated rototranslation based on odometry params. */
 	double o[3];
 	
-	/** Estimated disagreement  sm - est_sm  */
+	/* Estimated disagreement  sm - est_sm  */
 	// double e_sm[3];
 	
 	double est_sm[3];
 	double err_sm[3];
 	
-	/** Other way to estimate disagreement:   l (+) s  - o (+) l  */
+	/* Other way to estimate disagreement:   l (+) s  - o (+) l  */
 	double err[3];
 	
 	int mark_as_outlier;
 	
     
-	/** Computes plenty of statistics, including estimated sm. */
+	/* Computes plenty of statistics, including estimated sm. */
 	void compute_disagreement(const calib_result&);
 	
-	/** Computes fisher information matrix. inf_sm is the inverse of the covariance of sm */
+	/* Computes fisher information matrix. inf_sm is the inverse of the covariance of sm */
     //** gsl_matrix* compute_fim(struct calib_result&, gsl_matrix * inf_sm);
-    Eigen::MatrixXd compute_fim(struct calib_result&, const Eigen::MatrixXd &inf_sm);
+    Eigen::MatrixXd compute_fim(struct calib_result&, const Eigen::MatrixXd &eigen_inf_sm);
 	
 	void write_as_long_line(std::ostream&os);
 
