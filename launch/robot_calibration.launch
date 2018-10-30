@@ -1,0 +1,16 @@
+<launch>
+
+  <node pkg="robot_calibration" type="robot_calibration" name="robot_calibration" output="screen">
+    <remap from="scan" to="sick_scan" />
+
+    <param name="IsUseChampionScan" value="true"/>
+    <param name="MaxConditionNumber" value="50.0" />
+    <param name="OutlierIterations" value="5" />
+    <param name="OutlierPercentage" value="0.04" />
+    <param name="DistThreshold" value="0.05" />
+    <param name="AngleThreshold" value="3.0" />
+
+  </node>
+
+
+</launch>
