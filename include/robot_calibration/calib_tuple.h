@@ -9,6 +9,8 @@
 #include <csm/csm_all.h>
 
 #include "./gsl_jacobian.h"
+#include <eigen3/Eigen/Core>
+#include <eigen3/Eigen/Dense>
 
 enum CALIBR_MODE
 {

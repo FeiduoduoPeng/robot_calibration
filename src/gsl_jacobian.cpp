@@ -2,53 +2,38 @@
 
 struct my_params_struct {
     int i, j;
-    //** gsl_vector * (*function)(const gsl_vector* x, void*params);
-    //** const gsl_vector * x0;
-    Eigen::Matrix<double, Eigen::Dynamic, 1> (*function)(const Eigen::Matrix<double,Eigen::Dynamic,1> &x, void *params);
-    //const Eigen::Matrix<double,Eigen::Dynamic,1> x0;
-    Eigen::Matrix<double,Eigen::Dynamic,1> x0;
+    gsl_vector * (*function)(const gsl_vector* x, void*params);
+    const gsl_vector * x0;
     void * params;
 };
 
 double my_gsl_function(double xj, void * my_params) {
-    using namespace Eigen;
     struct my_params_struct * s = (struct my_params_struct*) my_params;   
 
     // create x by copying x0 and setting xj
-    //** gsl_vector * x = gsl_vector_alloc(s->x0->size);
-    //** gsl_vector_memcpy(x, s->x0);
-    //** gsl_vector_set(x, s->j, xj);
-    VectorXd x(s->x0);
-    x(s->j) = xj;
+    gsl_vector * x = gsl_vector_alloc(s->x0->size);
+    gsl_vector_memcpy(x, s->x0);
+    gsl_vector_set(x, s->j, xj);
     
-    //** gsl_vector * fx = s->function(x, s->params);
-    Matrix<double, Dynamic, 1> fx = s->function(x , s->params);
+    gsl_vector * fx = s->function(x, s->params);
     
-    //** double fi = gsl_vector_get(fx, s->i);
-    double fi = fx(s->i);
+    double fi = gsl_vector_get(fx, s->i);
     
-    //** gsl_vector_free(fx);
-    //** gsl_vector_free(x);
+    gsl_vector_free(fx);
+    gsl_vector_free(x);
     
     return fi;
 }
 
 
-//** gsl_matrix * gsl_jacobian( gsl_vector * (*function)(const gsl_vector* x, void*params), const gsl_vector *x, void*params) {
-Eigen::MatrixXd gsl_jacobian(
-    Eigen::Matrix<double,Eigen::Dynamic,1> (*function)(const Eigen::Matrix<double,Eigen::Dynamic,1> &x, void *params),
-    const Eigen::Matrix<double,Eigen::Dynamic,1> &x,
-    void *params){
-
-    using namespace Eigen;
-    //** gsl_vector * fx =  function(x, params);
-    //** int rows = fx->size;
-    //** int columns = x->size;
-    //** gsl_matrix * m = gsl_matrix_alloc(rows,columns);
-    MatrixXd fx =  function(x, params);
-    int rows = fx.rows();
-    int columns = x.rows();
-    MatrixXd m(rows, columns);
+gsl_matrix * gsl_jacobian( gsl_vector * (*function)(const gsl_vector* x, void*params), const gsl_vector *x, void*params) {
+  
+    gsl_vector * fx =  function(x,params);
+    
+    int rows = fx->size;
+    int columns = x->size;
+        
+    gsl_matrix * m = gsl_matrix_alloc(rows,columns);
     
     
     for(int i=0;i<rows;i++)
@@ -69,14 +54,14 @@ Eigen::MatrixXd gsl_jacobian(
             double abserr;
             double h = 0.001;
 
-            //** int res = gsl_deriv_central( &F, gsl_vector_get(x,j), h, &result, &abserr);
-            int res = gsl_deriv_central( &F, x(j), h, &result, &abserr);
+            int res = gsl_deriv_central( &F, gsl_vector_get(x,j), h, &result, &abserr);
+
             
-            //** gsl_matrix_set(m,i,j,result);
-            m(i,j) = result;
+            gsl_matrix_set(m,i,j,result);
+            
         }
         
-    //** gsl_vector_free(fx);
+    gsl_vector_free(fx);
     
     
     return m;
